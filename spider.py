@@ -52,6 +52,8 @@ class SpiderThread(Thread):
                     break
             except requests.exceptions.ConnectionError as e:
                 print(url + ' Connection error, try again...')
+            except requests.exceptions.ReadTimeout as e:
+                print(url + ' Read timeout, try again...')
             finally:
                 pass
         return html
