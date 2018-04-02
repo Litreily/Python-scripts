@@ -21,7 +21,7 @@ import platform
 # Algorithm design:
 # 2 threads with 2 queues
 # Thread-1, get first page url, then get page_num and mechanism_name from first page
-# Thread-2, parse html file and get data from it, then output data to excel file
+# Thread-2, parse html file and get data from it, then output data to local file
 # url_queue data -> 'url'  # first url of each mechanism
 # html_queue data -> {'name':'mechanism_name', 'html':data}
 
@@ -99,35 +99,30 @@ class DatamineThread(Thread):
 
     def __datamine(self, data):
         '''Get data from html content'''
-        path = Storage.get_path(data['name'])
-        fid = open(path, 'a', encoding='utf-8')
-        if not os.path.getsize(path):
-            fid.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % \
-            ('姓名', '性别', '从业资格号', '投资咨询从业证书号', '任职部门', '职务', '任现职时间'))
-
         soup = BeautifulSoup(data['content'].text, 'html.parser')
+        infos = []
         for info in soup.find_all('tr', id=True):
-            info_items = info.find_all('td')
-            cnt = 0
-            for item in info_items:
-                cnt += 1
-                if cnt < len(info_items):
-                    fid.write(item.get_text() + '\t')
-                else:
-                    fid.write(item.get_text() + '\n')
-        fid.close()
-
+            items = []
+            for item in info.find_all('td'):
+                items.append(item.get_text())
+            infos.append(items)
+        return infos
+        
     def run(self):
         while True:
             data = self.html_queue.get()
             print('Datamine Thread: get %s_%d' % (data['name'], data['num']))
-            self.__datamine(data)
-        
+
+            store = Storage(data['name'])
+            store.save(self.__datamine(data))
             self.html_queue.task_done()
 
 
 class Storage():
-    def get_path(filename):
+    def __init__(self, filename):
+        self.path = self.__get_path(filename + '.txt')
+
+    def __get_path(self, filename):
         path = {
             'Windows': 'D:/litreily/Documents/python/cfachina',
             'Linux': '/mnt/d/litreily/Documents/python/cfachina'
@@ -135,7 +130,19 @@ class Storage():
 
         if not os.path.isdir(path):
             os.makedirs(path)
-        return '%s/%s.txt' % (path, filename)
+        return '%s/%s' % (path, filename)
+    
+    def save(self, data):
+        '''Save data to local file'''
+        fid = open(self.path, 'a', encoding='utf-8')
+
+        if not os.path.getsize(self.path):
+            fid.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % \
+            ('姓名', '性别', '从业资格号', '投资咨询从业证书号', '任职部门', '职务', '任现职时间'))
+        
+        for info in data:
+            fid.write('\t'.join(info) + '\n')
+        fid.close()
     
 
 def main():
