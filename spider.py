@@ -40,13 +40,14 @@ class SpiderThread(Thread):
         self.headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'}
 
     def __get_url(self, mechanism_id, current_page):
-        return 'http://www.cfachina.org/cfainfo/organbaseinfoOneServlet?organid=+%s+&currentPage=%d&pageSize=%d&selectType=personinfo&all=undefined' % (mechanism_id, current_page, self.page_size)
+        return 'http://www.cfachina.org/cfainfo/organbaseinfoOneServlet?organid=+%s+&currentPage=%d&pageSize=%d&selectType=personinfo&all=undefined' \
+        % (mechanism_id, current_page, self.page_size)
 
     def grab(self, url):
         '''Grab html of url from web'''
         while True:
             try:
-                html = requests.get(url, headers=self.headers)
+                html = requests.get(url, headers=self.headers, timeout=20)
                 if html.status_code == 200:
                     break
             except requests.exceptions.ConnectionError as e:
@@ -97,7 +98,7 @@ class DatamineThread(Thread):
     def __datamine(self, data):
         '''Get data from html content'''
         path = Storage.get_path(data['name'])
-        fid = open(path, 'a+')
+        fid = open(path, 'a', encoding='utf-8')
         if not os.path.getsize(path):
             fid.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % \
             ('姓名', '性别', '从业资格号', '投资咨询从业证书号', '任职部门', '职务', '任现职时间'))
@@ -112,7 +113,6 @@ class DatamineThread(Thread):
                     fid.write(item.get_text() + '\t')
                 else:
                     fid.write(item.get_text() + '\n')
-
         fid.close()
 
     def run(self):
@@ -121,7 +121,7 @@ class DatamineThread(Thread):
             print('Datamine Thread: get %s_%d' % (data['name'], data['num']))
             self.__datamine(data)
         
-        self.html_queue.task_done()
+            self.html_queue.task_done()
 
 
 class Storage():
