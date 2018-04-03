@@ -113,14 +113,14 @@ class DatamineThread(Thread):
             data = self.html_queue.get()
             print('Datamine Thread: get %s_%d' % (data['name'], data['num']))
 
-            store = Storage(data['name'])
-            store.save(self.__datamine(data))
+            store = Storage(data['name'] + '.txt')
+            store.save_to_txt(self.__datamine(data))
             self.html_queue.task_done()
 
 
 class Storage():
     def __init__(self, filename):
-        self.path = self.__get_path(filename + '.txt')
+        self.path = self.__get_path(filename)
 
     def __get_path(self, filename):
         path = {
@@ -132,7 +132,7 @@ class Storage():
             os.makedirs(path)
         return '%s/%s' % (path, filename)
     
-    def save(self, data):
+    def save_to_txt(self, data):
         '''Save data to local file'''
         fid = open(self.path, 'a', encoding='utf-8')
 
