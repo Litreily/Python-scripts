@@ -75,6 +75,7 @@ class SpiderThread(Thread):
 
             page_cnt = self.url_re.search(html.text).group(1)
             if page_cnt == '0':
+                self.url_queue.task_done()
                 continue
             
             soup = BeautifulSoup(html.text, 'html.parser')
