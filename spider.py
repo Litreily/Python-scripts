@@ -12,6 +12,12 @@ from bs4 import BeautifulSoup
 import os
 import platform
 
+import xlwt
+from xlrd import open_workbook
+from xlutils.copy import copy
+
+import time
+
 # url format ↓
 # http://www.cfachina.org/cfainfo/organbaseinfoOneServlet?organid=+G01001+&currentPage=1&pageSize=20&selectType=personinfo&all=undefined
 # organid: +G01001+, +G01002+, +G01003+, ...
@@ -54,6 +60,8 @@ class SpiderThread(Thread):
                 print(url + ' Connection error, try again...')
             except requests.exceptions.ReadTimeout as e:
                 print(url + ' Read timeout, try again...')
+            except Exception as e:
+                print(str(e))
             finally:
                 pass
         return html
@@ -94,9 +102,10 @@ class SpiderThread(Thread):
 
 class DatamineThread(Thread):
     """Parse data from html"""
-    def __init__(self, html_queue):
+    def __init__(self, html_queue, filetype):
         Thread.__init__(self)
         self.html_queue = html_queue
+        self.filetype = filetype
 
     def __datamine(self, data):
         '''Get data from html content'''
@@ -114,16 +123,19 @@ class DatamineThread(Thread):
             data = self.html_queue.get()
             print('Datamine Thread: get %s_%d' % (data['name'], data['num']))
 
-            store = Storage(data['name'] + '.txt')
-            store.save_to_txt(self.__datamine(data))
+            store = Storage(data['name'], self.filetype)
+            store.save(self.__datamine(data))
             self.html_queue.task_done()
 
 
 class Storage():
-    def __init__(self, filename):
-        self.path = self.__get_path(filename)
+    def __init__(self, filename, filetype):
+        self.filetype = filetype
+        self.filename = filename + filetype
+        self.table_header = ('姓名', '性别', '从业资格号', '投资咨询从业证书号', '任职部门', '职务', '任现职时间')
+        self.path = self.__get_path()
 
-    def __get_path(self, filename):
+    def __get_path(self):
         path = {
             'Windows': 'D:/litreily/Documents/python/cfachina',
             'Linux': '/mnt/d/litreily/Documents/python/cfachina'
@@ -131,20 +143,73 @@ class Storage():
 
         if not os.path.isdir(path):
             os.makedirs(path)
-        return '%s/%s' % (path, filename)
+        return '%s/%s' % (path, self.filename)
     
-    def save_to_txt(self, data):
-        '''Save data to local file'''
+    def write_txt(self, data):
+        '''Write data to txt file'''
         fid = open(self.path, 'a', encoding='utf-8')
 
+        # insert the header of table
         if not os.path.getsize(self.path):
-            fid.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % \
-            ('姓名', '性别', '从业资格号', '投资咨询从业证书号', '任职部门', '职务', '任现职时间'))
+            fid.write('\t'.join(self.table_header) + '\n')
         
         for info in data:
             fid.write('\t'.join(info) + '\n')
         fid.close()
     
+    def write_excel(self, data):
+        '''write data to excel file'''
+        if not os.path.exists(self.path):
+            header_style = xlwt.easyxf('font:name 楷体, color-index black, bold on')
+            wb = xlwt.Workbook(encoding='utf-8')
+            ws = wb.add_sheet('Data')
+
+            # insert the header of table
+            for i in range(len(self.table_header)):
+                ws.write(0, i, self.table_header[i], header_style)
+                # ws.col(i).width = 256 * (10, 10, 15, 20, 50, 20, 15)[i]
+        else:
+            rb = open_workbook(self.path)
+            wb = copy(rb)
+            ws = wb.get_sheet(0)
+        
+        # write data
+        offset = len(ws.rows)
+        for i in range(0, len(data)):
+            for j in range(0, len(data[0])):
+                ws.write(offset + i, j, data[i][j])
+
+        # When use xlutils.copy.copy function to copy data from exist .xls file,
+        # it will loss the origin style, so we need overwrite the width of column,
+        # maybe there some other good solution, but I have not found yet.
+        for i in range(len(self.table_header)):
+            ws.col(i).width = 256 * (10, 10, 15, 20, 50, 20, 15)[i]
+
+        # save to file
+        while True:
+            try:
+                wb.save(self.path)
+                break
+            except PermissionError as e:
+                print('{0} error: {1}'.format(self.path, e.strerror))
+                time.sleep(5)
+            finally:
+                pass
+    
+    def save(self, data):
+        '''Write data to local file.
+
+        According filetype to choose function to save data, filetype can be '.txt' 
+        or '.xls', but '.txt' type is saved more faster then '.xls' type
+
+        Args:
+            data: a 2d-list array that need be save
+        '''
+        {
+            '.txt': self.write_txt,
+            '.xls': self.write_excel
+        }.get(self.filetype)(data)
+
 
 def main():
     for i in range(1001, 1199):
@@ -156,7 +221,7 @@ def main():
     st.start()
 
     # create and start a datamine thread
-    dt = DatamineThread(html_queue)
+    dt = DatamineThread(html_queue, '.txt')
     dt.setDaemon(True)
     dt.start()
 
