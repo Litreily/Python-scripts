@@ -221,7 +221,7 @@ def main():
     st.start()
 
     # create and start a datamine thread
-    dt = DatamineThread(html_queue, '.txt')
+    dt = DatamineThread(html_queue, '.xls')
     dt.setDaemon(True)
     dt.start()
 
