@@ -167,7 +167,6 @@ class Storage():
             # insert the header of table
             for i in range(len(self.table_header)):
                 ws.write(0, i, self.table_header[i], header_style)
-                # ws.col(i).width = 256 * (10, 10, 15, 20, 50, 20, 15)[i]
         else:
             rb = open_workbook(self.path)
             wb = copy(rb)
