@@ -11,7 +11,8 @@ def write_row(table, row_index, row_value):
 
 
 # get origial data from xls file
-path = 'E:/Guangtao.Wu/Desktop/TC.xls'
+path = 'D:/litreily/Desktop/TC.xls'
+#path = 'E:/Guangtao.Wu/Desktop/TC.xls'
 rb = xlrd.open_workbook(path)
 orig_table = rb.sheet_by_name("原始数据")
 
@@ -29,17 +30,25 @@ for i in range(4):
     new_table.write(0, i, ('产品名称', '类型', '日期', '金额')[i])
 
 # initial data
-share = 0.0  # 确认份额/赎回份额
-equity = 1.0  # 单位净值
-share_sum = 0.0  # 确认份额，赎回份额累积求和
-others_sum = 0.0  # 除 '交易' 和 '回款' 外的原始数据总和
-
 index = 0  # 新表索引
+product_changed = True  # 产品切换标志
+pre_product = None  # 前个产品名称
 
 # start processing
 for row in range(1, orig_table.nrows):
+    print('processing row %s ......' % row)
     row_value = orig_table.row_values(row)
     data_type = row_value[1]
+
+    product_changed = (not pre_product) or (row_value[0] != pre_product)
+    if product_changed:
+        share = 0.0  # 确认份额/赎回份额
+        equity = 1.0  # 单位净值
+        share_sum = 0.0  # 确认份额，赎回份额累积求和
+        others_sum = 0.0  # 除 '交易' 和 '回款' 外的原始数据总和
+        product_changed = False
+        pre_product = row_value[0]
+        cur_product_row = row
 
     if '金' in data_type:
         share_name = '{0}份额-{1}'.format(
@@ -48,7 +57,7 @@ for row in range(1, orig_table.nrows):
                 False: '赎回'
             }.get('入金' in data_type), data_type[-1])
 
-        if row < 3:
+        if (row - cur_product_row) < 2:
             share = row_value[3]
             share_sum += share
             others_sum += share
@@ -80,4 +89,6 @@ for row in range(1, orig_table.nrows):
         write_row(new_table, index, row_value)
         others_sum += row_value[3]
 
+print('saving data to the %s ......' % path)
 wb.save(path)
+print('Done!')
