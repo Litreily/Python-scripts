@@ -6,7 +6,6 @@ from xlutils.copy import copy
 
 
 def write_row(table, row_index, row_value):
-    print(row_value)
     for i in range(len(row_value)):
         table.write(row_index, i, row_value[i])
 
@@ -52,6 +51,7 @@ for row in range(1, orig_table.nrows):
         if row < 3:
             share = row_value[3]
             share_sum += share
+            others_sum += share
 
             write_row(new_table, index + 1, row_value)
             write_row(new_table, index + 2, [row_value[0], share_name, row_value[2], share])
@@ -63,8 +63,8 @@ for row in range(1, orig_table.nrows):
         # 计算确认份额或赎回份额
         share = row_value[3] / equity
 
-        others_sum += row_value[3]
         share_sum += share
+        others_sum += row_value[3]
 
         # 存储数据
         write_row(new_table, index + 1, [row_value[0], '单位净值', row_value[2], equity])
