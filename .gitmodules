@@ -1,0 +1,3 @@
+[submodule "Gitbook2HexoDoc"]
+	path = Gitbook2HexoDoc
+	url = git@github.com:Litreily/Gitbook2HexoDoc.git
