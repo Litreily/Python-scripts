@@ -8,12 +8,13 @@ from urllib.parse import urlparse
 
 import datetime
 import sys
+import os
 import io
 
 
-def ycykyl_parse(html):
-    """Parse html text of www.ycykyl.com """
-    article = html.find('div', {'class': 'showren'})
+def whitelist_parse(html, cls):
+    """Parse specific websites"""
+    article = html.find('div', {'class': cls})
     return common_parse(article)
 
 
@@ -53,20 +54,25 @@ def save(output):
         f.write(output)
 
 
-parsers = {
-    'www.ycykyl.com': ycykyl_parse,
-    'others': common_parse,
+web_cls = {
+    """parser for specific websites"""
+    'www.ycykyl.com': 'showren',
+    'www.upkao.com': 'm-cmsinfo-cont',
+    'www.zuowen.com': 'con_content',
 }
 
 def main():
     url = sys.argv[1]
     html = get_html(url)
 
-    domain = urlparse(url).netloc
-    if domain not in parsers:
-        domain = 'others'
+    web_domain = urlparse(url).netloc
+    print('get domain of website: {}'.format(web_domain))
 
-    output = parsers[domain](html)
+    if web_domain in web_cls:
+        output = whitelist_parse(html, web_cls[web_domain])
+    else:
+        output = common_parse(html)
+
     save(output)
 
 if __name__ == '__main__':
