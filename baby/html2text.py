@@ -33,7 +33,7 @@ def common_parse(article):
     output = ''
     count = 0 # count of '\n'
     blacklist = ['[document]', 'html', 'head', 'meta', 'body', 'header',
-                 'script', 'a', 'noscript', 'input', 'style']
+                 'script', 'footer', 'noscript', 'input', 'style']
 
     for t in text:
         if t.parent.name in blacklist:
