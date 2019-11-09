@@ -50,7 +50,12 @@ def common_parse(article):
 
 
 def save(output):
-    with io.open('text.txt', 'w', newline='\r\n', encoding='utf-8') as f:
+    save_dir = 'results'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    with io.open(os.path.join(save_dir, 'text.txt'), 'w',
+                 newline='\r\n', encoding='utf-8') as f:
         f.write(output)
 
 
