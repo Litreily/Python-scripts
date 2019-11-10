@@ -3,3 +3,5 @@ images/
 tags
 *.pyc
 results/
+build/
+*.spec
