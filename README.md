@@ -2,9 +2,22 @@
 
 > some demos which coding with python
 
-## cfachina spider
+## algorithm
 
-Spider of data from http://www.cfachina.org/cfainfo/organbaseinfoServlet
+Some basic sort algorithms
+
+- quick sort
+
+## autoDL
+
+download files from web and showing the processing bar
+
+## cfachina
+
+### Description
+
+- `cfachina_spider` Spider of data from http://www.cfachina.org/cfainfo/organbaseinfoServlet
+- `RWExcel` Read and write data from .xls files
 
 ### How to use
 
@@ -28,10 +41,15 @@ Spider of data from http://www.cfachina.org/cfainfo/organbaseinfoServlet
 - If set `pageSize` to `1000`, it will grab only one page for each meachanism, so it should be more faster
 - Save to `.txt` file is more faster then `.xls` file
 
-## RWExcel
+## Gitbook2HexoDoc
 
-Read and write data from .xls files
+convert gitbook files to hexo blog post files
 
-### Dependencies libs
+## img2ascii
 
-- `xlwt`, `xlrd`, `xlutils`
+a simple tool use to convert image to ascii text
+
+## wechat
+
+wechat client base on tkinter GUI
+
