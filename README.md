@@ -8,7 +8,7 @@ Some basic sort algorithms
 
 - quick sort
 
-## autoDL
+## dl
 
 download files from web and showing the processing bar
 
